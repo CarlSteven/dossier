@@ -6,7 +6,7 @@ module Dossier
 
       def initialize(options = {})
         self.options    = options
-        self.connection = options.delete(:connection) || active_record_connection
+        self.connection = active_record_connection
       end
 
       def escape(value)
@@ -15,6 +15,8 @@ module Dossier
 
       def execute(query, report_name = nil)
         # Ensure that SQL logs show name of report generating query
+        @abstract_class.establish_connection(options)
+        connection = @abstract_class.connection
         Result.new(connection.exec_query(*["\n#{query}", report_name].compact))
       rescue => e
         raise Dossier::ExecuteError.new "#{e.message}\n\n#{query}"
@@ -31,8 +33,7 @@ module Dossier
             "Dossier::Adapter::ActiveRecord::Connection_#{object_id}"
           end
         end
-        @abstract_class.establish_connection(options)
-        @abstract_class.connection
+        @abstract_class
       end
 
     end
